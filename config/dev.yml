@@ -7,7 +7,7 @@ paths:
   quarantine: "/Volumes/finmarket_dev/silver/trades_quarantine/"
   gold:       "/Volumes/finmarket_dev/gold/trade_summary/"
 
-catalog: finmarket
+catalog: finmarket_dev
 
 tables:
   bronze: "finmarket.bronze.trades"
