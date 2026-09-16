@@ -29,8 +29,10 @@ def cleanse(df: DataFrame) -> DataFrame:
     """
     Apply type casting and standardisation transformations.
     Matches exactly what was validated in exploration notebook.
+    _corrupt_record check is guarded — only present when reading
+    JSON with PERMISSIVE mode in production, not in unit tests.
     """
-    return (
+    df = (
         df
         # Parse dates — format confirmed in notebook: yyyy-MM-dd
         .withColumn("trade_date",    F.to_date(F.col("trade_date"),  "yyyy-MM-dd"))
@@ -51,16 +53,19 @@ def cleanse(df: DataFrame) -> DataFrame:
 
         # Silver audit column
         .withColumn("_silver_processed_at", F.current_timestamp())
-
-        # Drop corrupt records from Bronze permissive read
-        .filter(F.col("_corrupt_record").isNull())
-        .drop("_corrupt_record")
     )
+
+    # Drop corrupt records from Bronze permissive read
+    # Guarded — _corrupt_record only exists when reading JSON with PERMISSIVE mode
+    if "_corrupt_record" in df.columns:
+        df = df.filter(F.col("_corrupt_record").isNull()).drop("_corrupt_record")
+
+    return df
 
 
 def apply_dq_flags(df: DataFrame) -> DataFrame:
     """
-    Tag each row with dq_pass flag.
+    Tag each row with dq_pass flag and dq_fail_reason.
     A trade must have a valid trader_id — null trader_id is not
     a valid trade in any financial system and goes to quarantine.
     Expected: Bronze=10, Silver=8, Quarantine=2 (T-009, T-010).
@@ -77,6 +82,18 @@ def apply_dq_flags(df: DataFrame) -> DataFrame:
             (F.col("price") > 0) &
             F.col("side").isin("BUY", "SELL") &
             F.col("trade_date").isNotNull()
+        )
+        .withColumn("dq_fail_reason",
+            F.when(F.col("trade_id").isNull(),          F.lit("NULL trade_id"))
+             .when(F.col("trader_id").isNull(),         F.lit("NULL trader_id"))
+             .when(F.col("instrument_id").isNull(),     F.lit("NULL instrument_id"))
+             .when(F.col("quantity").isNull(),          F.lit("NULL quantity"))
+             .when(F.col("price").isNull(),             F.lit("NULL price"))
+             .when(F.col("quantity") <= 0,              F.lit("quantity <= 0"))
+             .when(F.col("price") <= 0,                 F.lit("price <= 0"))
+             .when(~F.col("side").isin("BUY", "SELL"),  F.lit("invalid side"))
+             .when(F.col("trade_date").isNull(),         F.lit("NULL trade_date"))
+             .otherwise(F.lit(None))
         )
     )
 
