@@ -8,7 +8,7 @@ variables:
 
   repo_path:
     description: "Path to notebook in Databricks Repos"
-    default: "/Workspace/Repos/rakesh.singh1004@gmail.com/trades-pipeline"
+    default: "/Workspace/Repos/databricks-trades-pipeline"
 
 targets:
 
