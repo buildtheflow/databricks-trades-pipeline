@@ -2,10 +2,6 @@ bundle:
   name: trades-medallion-pipeline
 
 variables:
-  cluster_id:
-    description: "Cluster ID — get from Compute > your cluster > JSON tab"
-    default: "your-cluster-id"
-
   repo_path:
     description: "Path to notebook in Databricks Repos"
     default: "/Workspace/databricks-trades-pipeline"
@@ -16,12 +12,12 @@ targets:
     mode: development
     default: true
     workspace:
-      host: dbc-4e2ef701-b36a.cloud.databricks.com
+      host: https://dbc-4e2ef701-b36a.cloud.databricks.com
 
   prod:
     mode: production
     workspace:
-      host: dbc-4e2ef701-b36a.cloud.databricks.com
+      host: https://dbc-4e2ef701-b36a.cloud.databricks.com
 
 resources:
   jobs:
