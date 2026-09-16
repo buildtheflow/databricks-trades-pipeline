@@ -133,7 +133,7 @@ def write_silver(df: DataFrame, config: PipelineConfig) -> dict:
         silver_pass_df.write
         .format("delta")
         .mode("overwrite")
-        .option("overwriteSchema", "false")
+        .option("overwriteSchema", "true")
         .partitionBy("trade_date")
         .saveAsTable(config.tables.silver)
     )
