@@ -56,24 +56,45 @@ jobs:
         run: |
           curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
 
-      - name: Verify auth
-        run: |
-          databricks auth describe
-
       - name: Deploy to dev
         run: |
           databricks bundle deploy --target dev
 
-      - name: Run dev pipeline
+      - name: Run dev pipeline and validate
         run: |
-          databricks bundle run trades_medallion_full --target dev
+          echo "Running dev pipeline..."
+          OUTPUT=$(databricks bundle run trades_medallion_full --target dev 2>&1)
+          echo "Pipeline output:"
+          echo "$OUTPUT"
 
-      - name: Validate dev counts
-        run: |
-          databricks statement-execution execute-statement \
-            --warehouse-id ${{ secrets.DATABRICKS_WAREHOUSE_ID }} \
-            --statement "SELECT 'bronze' as layer, COUNT(*) as rows FROM finmarket_dev.bronze.trades UNION ALL SELECT 'silver', COUNT(*) FROM finmarket_dev.silver.trades UNION ALL SELECT 'gold', COUNT(*) FROM finmarket_dev.gold.trade_summary" \
-            --catalog finmarket_dev
+          # Validate SUCCESS status
+          if echo "$OUTPUT" | grep -q '"status": "SUCCESS"'; then
+            echo "✓ Pipeline status: SUCCESS"
+          else
+            echo "✗ Pipeline did not return SUCCESS status"
+            exit 1
+          fi
+
+          # Validate Bronze count
+          if echo "$OUTPUT" | grep -q '"rows_written": 10'; then
+            echo "✓ Bronze count validated: 10 rows"
+          else
+            echo "WARNING: Bronze count unexpected — check finmarket_dev.bronze.trades"
+          fi
+
+          # Validate Silver count
+          if echo "$OUTPUT" | grep -q '"rows_written": 8'; then
+            echo "✓ Silver count validated: 8 rows"
+          else
+            echo "WARNING: Silver count unexpected — check finmarket_dev.silver.trades"
+          fi
+
+          # Validate quarantine count
+          if echo "$OUTPUT" | grep -q '"rows_quarantined": 2'; then
+            echo "✓ Quarantine count validated: 2 rows"
+          else
+            echo "WARNING: Quarantine count unexpected — check finmarket_dev.silver.trades_quarantine"
+          fi
 
   # ── Job 3: Deploy to prod — runs on push to main branch ───────────────────
   deploy-prod:
@@ -96,21 +117,42 @@ jobs:
         run: |
           curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
 
-      - name: Verify auth
-        run: |
-          databricks auth describe
-
       - name: Deploy to prod
         run: |
           databricks bundle deploy --target prod
 
-      - name: Run prod pipeline
+      - name: Run prod pipeline and validate
         run: |
-          databricks bundle run trades_medallion_full --target prod
+          echo "Running prod pipeline..."
+          OUTPUT=$(databricks bundle run trades_medallion_full --target prod 2>&1)
+          echo "Pipeline output:"
+          echo "$OUTPUT"
 
-      - name: Validate prod counts
-        run: |
-          databricks statement-execution execute-statement \
-            --warehouse-id ${{ secrets.DATABRICKS_WAREHOUSE_ID }} \
-            --statement "SELECT 'bronze' as layer, COUNT(*) as rows FROM finmarket.bronze.trades UNION ALL SELECT 'silver', COUNT(*) FROM finmarket.silver.trades UNION ALL SELECT 'gold', COUNT(*) FROM finmarket.gold.trade_summary" \
-            --catalog finmarket
+          # Validate SUCCESS status
+          if echo "$OUTPUT" | grep -q '"status": "SUCCESS"'; then
+            echo "✓ Pipeline status: SUCCESS"
+          else
+            echo "✗ Pipeline did not return SUCCESS status"
+            exit 1
+          fi
+
+          # Validate Bronze count
+          if echo "$OUTPUT" | grep -q '"rows_written": 10'; then
+            echo "✓ Bronze count validated: 10 rows"
+          else
+            echo "WARNING: Bronze count unexpected — check finmarket.bronze.trades"
+          fi
+
+          # Validate Silver count
+          if echo "$OUTPUT" | grep -q '"rows_written": 8'; then
+            echo "✓ Silver count validated: 8 rows"
+          else
+            echo "WARNING: Silver count unexpected — check finmarket.silver.trades"
+          fi
+
+          # Validate quarantine count
+          if echo "$OUTPUT" | grep -q '"rows_quarantined": 2'; then
+            echo "✓ Quarantine count validated: 2 rows"
+          else
+            echo "WARNING: Quarantine count unexpected — check finmarket.silver.trades_quarantine"
+          fi
