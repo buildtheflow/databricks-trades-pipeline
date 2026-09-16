@@ -1,0 +1,138 @@
+name: Trades Medallion Pipeline — CI/CD
+
+# Triggers:
+# - Any branch push        → unit tests only
+# - Push to dev branch     → unit tests + deploy dev + run dev
+# - Push to main branch    → unit tests + deploy prod (after PR approval)
+
+on:
+  push:
+    branches:
+      - '**'        # all branches — runs unit tests
+  pull_request:
+    branches:
+      - dev         # PR to dev — runs tests + deploy dev
+      - main        # PR to main — runs tests only (prod deploy on merge)
+
+jobs:
+
+  # ── Job 1: Unit tests — runs on every push and PR ──────────────────────────
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install pyspark==3.5.0 delta-spark==3.0.0 pytest pyyaml
+
+      - name: Run unit tests
+        run: |
+          pytest tests/ -v --tb=short
+        env:
+          PYTHONPATH: src
+
+  # ── Job 2: Deploy to dev — runs on push to dev branch ─────────────────────
+  deploy-dev:
+    name: Deploy to Dev
+    runs-on: ubuntu-latest
+    needs: unit-tests          # only runs if unit tests pass
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Databricks CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+
+      - name: Deploy to dev
+        env:
+          DATABRICKS_HOST:  ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        run: |
+          databricks bundle deploy --target dev
+
+      - name: Run dev pipeline
+        env:
+          DATABRICKS_HOST:  ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        run: |
+          databricks bundle run trades_medallion_full --target dev
+
+      - name: Validate dev counts
+        env:
+          DATABRICKS_HOST:  ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        run: |
+          # Run validation query via Databricks CLI
+          databricks statement-execution execute-statement \
+            --warehouse-id ${{ secrets.DATABRICKS_WAREHOUSE_ID }} \
+            --statement "
+              SELECT layer, rows FROM (
+                SELECT 'bronze' as layer, COUNT(*) as rows FROM finmarket_dev.bronze.trades
+                UNION ALL
+                SELECT 'silver', COUNT(*) FROM finmarket_dev.silver.trades
+                UNION ALL
+                SELECT 'gold', COUNT(*) FROM finmarket_dev.gold.trade_summary
+              )
+            " \
+            --catalog finmarket_dev
+
+  # ── Job 3: Deploy to prod — runs on merge to main ─────────────────────────
+  deploy-prod:
+    name: Deploy to Prod
+    runs-on: ubuntu-latest
+    needs: unit-tests          # only runs if unit tests pass
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    environment: production    # requires manual approval in GitHub Environments
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Databricks CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+
+      - name: Deploy to prod
+        env:
+          DATABRICKS_HOST:  ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        run: |
+          databricks bundle deploy --target prod
+
+      - name: Run prod pipeline
+        env:
+          DATABRICKS_HOST:  ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        run: |
+          databricks bundle run trades_medallion_full --target prod
+
+      - name: Validate prod counts
+        env:
+          DATABRICKS_HOST:  ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        run: |
+          databricks statement-execution execute-statement \
+            --warehouse-id ${{ secrets.DATABRICKS_WAREHOUSE_ID }} \
+            --statement "
+              SELECT layer, rows FROM (
+                SELECT 'bronze' as layer, COUNT(*) as rows FROM finmarket.bronze.trades
+                UNION ALL
+                SELECT 'silver', COUNT(*) FROM finmarket.silver.trades
+                UNION ALL
+                SELECT 'gold', COUNT(*) FROM finmarket.gold.trade_summary
+              )
+            " \
+            --catalog finmarket
