@@ -20,6 +20,7 @@ targets:
     mode: production
     workspace:
       host: https://dbc-4e2ef701-b36a.cloud.databricks.com
+      root_path: /Workspace/Users/rakesh.singh1004@gmail.com/.bundle/${bundle.name}/${bundle.target}
     variables:
       repo_path: "/Workspace/PROD/databricks-trades-pipeline"      
 
