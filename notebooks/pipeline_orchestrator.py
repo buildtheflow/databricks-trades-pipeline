@@ -27,7 +27,7 @@ import logging
 from datetime import datetime
 
 # Update this path to match your Repos location
-sys.path.insert(0, "/Workspace/Repos/rakesh.singh1004@gmail.com/trades-pipeline/src")
+sys.path.insert(0, "/Workspace/Users/rakesh.singh1004@gmail.com/.bundle/trades-medallion-pipeline/dev/files/src")
 
 from pipeline.config import load_config
 import pipeline.bronze as bronze_layer
