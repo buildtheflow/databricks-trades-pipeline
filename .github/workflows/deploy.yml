@@ -58,6 +58,8 @@ jobs:
           printf '[DEFAULT]\nhost = %s\ntoken = %s\n' \
             "${{ secrets.DATABRICKS_HOST }}" \
             "${{ secrets.DATABRICKS_TOKEN }}" > ~/.databrickscfg
+          echo "Config file contents:"
+          cat ~/.databrickscfg
 
       - name: Verify auth
         run: |
