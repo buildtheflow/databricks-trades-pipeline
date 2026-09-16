@@ -25,9 +25,15 @@ import sys
 import json
 import logging
 from datetime import datetime
+import os
 
-# Update this path to match your Repos location
-sys.path.insert(0, "/Workspace/Users/rakesh.singh1004@gmail.com/.bundle/trades-medallion-pipeline/dev/files/src")
+# Detect environment from widget and set correct bundle path
+env = dbutils.widgets.get("env")
+
+bundle_path = f"/Workspace/Users/rakesh.singh1004@gmail.com/.bundle/trades-medallion-pipeline/{env}/files/src"
+sys.path.insert(0, bundle_path)
+
+print(f"sys.path set to: {bundle_path}")
 
 from pipeline.config import load_config
 import pipeline.bronze as bronze_layer
