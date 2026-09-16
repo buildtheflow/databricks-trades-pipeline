@@ -46,10 +46,10 @@ def cleanse(df: DataFrame) -> DataFrame:
 
         # Derived columns
         .withColumn("notional_value",
-            F.round(F.col("quantity") * F.col("price"), 2))
+                    F.round(F.col("quantity") * F.col("price"), 2))
         .withColumn("signed_quantity",
-            F.when(F.col("side") == "SELL", -1 * F.col("quantity"))
-             .otherwise(F.col("quantity")))
+                    F.when(F.col("side") == "SELL", -1 * F.col("quantity"))
+                    .otherwise(F.col("quantity")))
 
         # Silver audit column
         .withColumn("_silver_processed_at", F.current_timestamp())
@@ -58,7 +58,8 @@ def cleanse(df: DataFrame) -> DataFrame:
     # Drop corrupt records from Bronze permissive read
     # Guarded — _corrupt_record only exists when reading JSON with PERMISSIVE mode
     if "_corrupt_record" in df.columns:
-        df = df.filter(F.col("_corrupt_record").isNull()).drop("_corrupt_record")
+        df = df.filter(F.col("_corrupt_record").isNull()
+                       ).drop("_corrupt_record")
 
     return df
 
@@ -73,41 +74,45 @@ def apply_dq_flags(df: DataFrame) -> DataFrame:
     return (
         df
         .withColumn("dq_pass",
-            F.col("trade_id").isNotNull() &
-            F.col("trader_id").isNotNull() &      # T-009 null trader_id → quarantine
-            F.col("instrument_id").isNotNull() &
-            F.col("quantity").isNotNull() &
-            F.col("price").isNotNull() &
-            (F.col("quantity") > 0) &             # T-010 negative quantity → quarantine
-            (F.col("price") > 0) &
-            F.col("side").isin("BUY", "SELL") &
-            F.col("trade_date").isNotNull()
-        )
+                    F.col("trade_id").isNotNull() &
+                    # T-009 null trader_id → quarantine
+                    F.col("trader_id").isNotNull() &
+                    F.col("instrument_id").isNotNull() &
+                    F.col("quantity").isNotNull() &
+                    F.col("price").isNotNull() &
+                    # T-010 negative quantity → quarantine
+                    (F.col("quantity") > 0) &
+                    (F.col("price") > 0) &
+                    F.col("side").isin("BUY", "SELL") &
+                    F.col("trade_date").isNotNull()
+                    )
         .withColumn("dq_fail_reason",
-            F.when(F.col("trade_id").isNull(),          F.lit("NULL trade_id"))
-             .when(F.col("trader_id").isNull(),         F.lit("NULL trader_id"))
-             .when(F.col("instrument_id").isNull(),     F.lit("NULL instrument_id"))
-             .when(F.col("quantity").isNull(),          F.lit("NULL quantity"))
-             .when(F.col("price").isNull(),             F.lit("NULL price"))
-             .when(F.col("quantity") <= 0,              F.lit("quantity <= 0"))
-             .when(F.col("price") <= 0,                 F.lit("price <= 0"))
-             .when(~F.col("side").isin("BUY", "SELL"),  F.lit("invalid side"))
-             .when(F.col("trade_date").isNull(),         F.lit("NULL trade_date"))
-             .otherwise(F.lit(None))
-        )
+                    F.when(F.col("trade_id").isNull(),
+                           F.lit("NULL trade_id"))
+                    .when(F.col("trader_id").isNull(),         F.lit("NULL trader_id"))
+                    .when(F.col("instrument_id").isNull(),     F.lit("NULL instrument_id"))
+                    .when(F.col("quantity").isNull(),          F.lit("NULL quantity"))
+                    .when(F.col("price").isNull(),             F.lit("NULL price"))
+                    .when(F.col("quantity") <= 0,              F.lit("quantity <= 0"))
+                    .when(F.col("price") <= 0,                 F.lit("price <= 0"))
+                    .when(~F.col("side").isin("BUY", "SELL"),  F.lit("invalid side"))
+                    .when(F.col("trade_date").isNull(),         F.lit("NULL trade_date"))
+                    .otherwise(F.lit(None))
+                    )
     )
 
 
 def check_dq_threshold(df: DataFrame, config: PipelineConfig) -> None:
     """Raise if quarantine rate exceeds configured threshold. Prod only."""
-    total      = df.count()
+    total = df.count()
     fail_count = df.filter(F.col("dq_pass") == False).count()
 
     if total == 0:
         raise ValueError("Silver: zero records after cleansing.")
 
     fail_pct = (fail_count / total) * 100
-    logger.warning(f"DQ: {fail_count:,} of {total:,} rows failed ({fail_pct:.1f}%)")
+    logger.warning(
+        f"DQ: {fail_count:,} of {total:,} rows failed ({fail_pct:.1f}%)")
 
     if config.dq.fail_on_quarantine and fail_pct > config.dq.max_quarantine_pct:
         raise RuntimeError(
@@ -133,15 +138,17 @@ def write_silver(df: DataFrame, config: PipelineConfig) -> dict:
         silver_pass_df.write
         .format("delta")
         .mode("overwrite")
-        .option("overwriteSchema", "true")
+        .option("overwriteSchema", "false")
         .partitionBy("trade_date")
         .saveAsTable(config.tables.silver)
     )
 
     # Quarantine — append to preserve failure history
     if fail_count > 0:
-        quarantine = config.tables.silver.replace(".trades", ".trades_quarantine")
-        logger.warning(f"Writing {fail_count:,} rows to quarantine: {quarantine}")
+        quarantine = config.tables.silver.replace(
+            ".trades", ".trades_quarantine")
+        logger.warning(
+            f"Writing {fail_count:,} rows to quarantine: {quarantine}")
         (
             silver_fail_df.write
             .format("delta")
@@ -157,9 +164,9 @@ def run(spark: SparkSession, config: PipelineConfig) -> dict:
     """Run the full Silver layer. Returns audit dict."""
     logger.info("=== SILVER LAYER START ===")
     bronze_df = read_bronze(spark, config)
-    cleansed  = cleanse(bronze_df)
-    flagged   = apply_dq_flags(cleansed)
+    cleansed = cleanse(bronze_df)
+    flagged = apply_dq_flags(cleansed)
     check_dq_threshold(flagged, config)
-    result    = write_silver(flagged, config)
+    result = write_silver(flagged, config)
     logger.info("=== SILVER LAYER COMPLETE ===")
     return result
