@@ -29,8 +29,10 @@ def cleanse(df: DataFrame) -> DataFrame:
     """
     Apply type casting and standardisation transformations.
     Matches exactly what was validated in exploration notebook.
+    _corrupt_record check is guarded — only present when reading
+    JSON with PERMISSIVE mode in production, not in unit tests.
     """
-    return (
+    df = (
         df
         # Parse dates — format confirmed in notebook: yyyy-MM-dd
         .withColumn("trade_date",    F.to_date(F.col("trade_date"),  "yyyy-MM-dd"))
@@ -51,11 +53,14 @@ def cleanse(df: DataFrame) -> DataFrame:
 
         # Silver audit column
         .withColumn("_silver_processed_at", F.current_timestamp())
-
-        # Drop corrupt records from Bronze permissive read
-        .filter(F.col("_corrupt_record").isNull())
-        .drop("_corrupt_record")
     )
+
+    # Drop corrupt records from Bronze permissive read
+    # Guarded — _corrupt_record only exists when reading JSON with PERMISSIVE mode
+    if "_corrupt_record" in df.columns:
+        df = df.filter(F.col("_corrupt_record").isNull()).drop("_corrupt_record")
+
+    return df
 
 
 def apply_dq_flags(df: DataFrame) -> DataFrame:
