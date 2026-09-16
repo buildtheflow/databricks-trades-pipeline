@@ -13,6 +13,7 @@ targets:
     default: true
     workspace:
       host: https://dbc-4e2ef701-b36a.cloud.databricks.com
+      auth_type: PAT
     variables:
       repo_path: "/Workspace/Users/rakesh.singh1004@gmail.com/.bundle/trades-medallion-pipeline/dev/files"
 
@@ -20,6 +21,7 @@ targets:
     mode: production
     workspace:
       host: https://dbc-4e2ef701-b36a.cloud.databricks.com
+      auth_type: PAT
       root_path: /Workspace/Users/rakesh.singh1004@gmail.com/.bundle/${bundle.name}/${bundle.target}
     variables:
       repo_path: "/Workspace/Users/rakesh.singh1004@gmail.com/.bundle/trades-medallion-pipeline/prod/files"      
