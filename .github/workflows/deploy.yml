@@ -54,11 +54,10 @@ jobs:
 
       - name: Configure Databricks auth
         run: |
-          mkdir -p ~/.databrickscfg || true
+          rm -rf ~/.databrickscfg
           printf '[DEFAULT]\nhost = %s\ntoken = %s\n' \
             "${{ secrets.DATABRICKS_HOST }}" \
             "${{ secrets.DATABRICKS_TOKEN }}" > ~/.databrickscfg
-          cat ~/.databrickscfg
 
       - name: Verify auth
         run: |
