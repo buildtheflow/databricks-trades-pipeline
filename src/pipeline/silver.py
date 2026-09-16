@@ -65,7 +65,7 @@ def cleanse(df: DataFrame) -> DataFrame:
 
 def apply_dq_flags(df: DataFrame) -> DataFrame:
     """
-    Tag each row with dq_pass flag.
+    Tag each row with dq_pass flag and dq_fail_reason.
     A trade must have a valid trader_id — null trader_id is not
     a valid trade in any financial system and goes to quarantine.
     Expected: Bronze=10, Silver=8, Quarantine=2 (T-009, T-010).
@@ -82,6 +82,18 @@ def apply_dq_flags(df: DataFrame) -> DataFrame:
             (F.col("price") > 0) &
             F.col("side").isin("BUY", "SELL") &
             F.col("trade_date").isNotNull()
+        )
+        .withColumn("dq_fail_reason",
+            F.when(F.col("trade_id").isNull(),          F.lit("NULL trade_id"))
+             .when(F.col("trader_id").isNull(),         F.lit("NULL trader_id"))
+             .when(F.col("instrument_id").isNull(),     F.lit("NULL instrument_id"))
+             .when(F.col("quantity").isNull(),          F.lit("NULL quantity"))
+             .when(F.col("price").isNull(),             F.lit("NULL price"))
+             .when(F.col("quantity") <= 0,              F.lit("quantity <= 0"))
+             .when(F.col("price") <= 0,                 F.lit("price <= 0"))
+             .when(~F.col("side").isin("BUY", "SELL"),  F.lit("invalid side"))
+             .when(F.col("trade_date").isNull(),         F.lit("NULL trade_date"))
+             .otherwise(F.lit(None))
         )
     )
 
