@@ -4,7 +4,7 @@ bundle:
 variables:
   repo_path:
     description: "Path to notebook in Databricks Repos"
-    default: "/Workspace/databricks-trades-pipeline"
+    default: "/Workspace/Repos/databricks-trades-pipeline"
 
 targets:
 
