@@ -1,0 +1,12 @@
+[
+  {"trade_id": "T-001", "trader_id": "TR-101", "instrument_id": "AAPL", "trade_date": "2024-01-15", "settle_date": "2024-01-17", "quantity": 500.0, "price": 185.50, "currency": "USD", "side": "BUY",  "status": "SETTLED", "source_system": "SYSTEM_A"},
+  {"trade_id": "T-002", "trader_id": "TR-102", "instrument_id": "MSFT", "trade_date": "2024-01-15", "settle_date": "2024-01-17", "quantity": 200.0, "price": 410.00, "currency": "USD", "side": "SELL", "status": "SETTLED", "source_system": "SYSTEM_A"},
+  {"trade_id": "T-003", "trader_id": "TR-101", "instrument_id": "NVDA", "trade_date": "2024-01-15", "settle_date": "2024-01-17", "quantity": 100.0, "price": 620.00, "currency": "USD", "side": "BUY",  "status": "PENDING", "source_system": "SYSTEM_B"},
+  {"trade_id": "T-004", "trader_id": "TR-103", "instrument_id": "TSLA", "trade_date": "2024-01-15", "settle_date": "2024-01-17", "quantity": 150.0, "price": 225.00, "currency": "USD", "side": "BUY",  "status": "SETTLED", "source_system": "SYSTEM_A"},
+  {"trade_id": "T-005", "trader_id": "TR-102", "instrument_id": "AMZN", "trade_date": "2024-01-15", "settle_date": "2024-01-17", "quantity": 75.0,  "price": 178.00, "currency": "USD", "side": "SELL", "status": "SETTLED", "source_system": "SYSTEM_B"},
+  {"trade_id": "T-006", "trader_id": "TR-104", "instrument_id": "GOOGL","trade_date": "2024-01-15", "settle_date": "2024-01-17", "quantity": 50.0,  "price": 142.00, "currency": "USD", "side": "BUY",  "status": "SETTLED", "source_system": "SYSTEM_A"},
+  {"trade_id": "T-007", "trader_id": "TR-103", "instrument_id": "META", "trade_date": "2024-01-15", "settle_date": "2024-01-17", "quantity": 300.0, "price": 375.00, "currency": "USD", "side": "SELL", "status": "SETTLED", "source_system": "SYSTEM_B"},
+  {"trade_id": "T-008", "trader_id": "TR-105", "instrument_id": "JPM",  "trade_date": "2024-01-15", "settle_date": "2024-01-17", "quantity": 400.0, "price": 172.00, "currency": "USD", "side": "BUY",  "status": "SETTLED", "source_system": "SYSTEM_A"},
+  {"trade_id": "T-009", "trader_id": null,      "instrument_id": "GS",   "trade_date": "2024-01-15", "settle_date": "2024-01-17", "quantity": 100.0, "price": 385.00, "currency": "USD", "side": "BUY",  "status": "SETTLED", "source_system": "SYSTEM_A"},
+  {"trade_id": "T-010", "trader_id": "TR-104", "instrument_id": "BAC",  "trade_date": "2024-01-15", "settle_date": "2024-01-17", "quantity": -50.0, "price": 33.00,  "currency": "USD", "side": "SELL", "status": "SETTLED", "source_system": "SYSTEM_B"}
+]

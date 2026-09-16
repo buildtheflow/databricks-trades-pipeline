@@ -1,0 +1,24 @@
+env: dev
+
+paths:
+  raw:        "/Volumes/finmarket/landing/raw_trades/"
+  bronze:     "/Volumes/finmarket/bronze/trades/"
+  silver:     "/Volumes/finmarket/silver/trades/"
+  quarantine: "/Volumes/finmarket/silver/trades_quarantine/"
+  gold:       "/Volumes/finmarket/gold/trade_summary/"
+
+catalog: finmarket
+
+tables:
+  bronze: "finmarket.bronze.trades"
+  silver: "finmarket.silver.trades"
+  gold:   "finmarket.gold.trade_summary"
+
+write:
+  bronze_mode: "append"
+  silver_mode: "overwrite"
+  gold_mode:   "overwrite"
+
+dq:
+  fail_on_quarantine: false
+  max_quarantine_pct: 10
