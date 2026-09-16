@@ -44,6 +44,10 @@ jobs:
     needs: unit-tests
     if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
 
+    env:
+      DATABRICKS_HOST:  ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -51,15 +55,6 @@ jobs:
       - name: Install Databricks CLI
         run: |
           curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
-
-      - name: Configure Databricks auth
-        run: |
-          rm -rf ~/.databrickscfg
-          printf '[DEFAULT]\nhost = %s\ntoken = %s\n' \
-            "${{ secrets.DATABRICKS_HOST }}" \
-            "${{ secrets.DATABRICKS_TOKEN }}" > ~/.databrickscfg
-          echo "Config file contents:"
-          cat ~/.databrickscfg
 
       - name: Verify auth
         run: |
@@ -89,6 +84,10 @@ jobs:
 
     environment: production
 
+    env:
+      DATABRICKS_HOST:  ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -96,12 +95,6 @@ jobs:
       - name: Install Databricks CLI
         run: |
           curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
-
-      - name: Configure Databricks auth
-        run: |
-          printf '[DEFAULT]\nhost = %s\ntoken = %s\n' \
-            "${{ secrets.DATABRICKS_HOST }}" \
-            "${{ secrets.DATABRICKS_TOKEN }}" > ~/.databrickscfg
 
       - name: Verify auth
         run: |
