@@ -1,4 +1,5 @@
 env: dev
+catalog: finmarket_dev
 
 paths:
   raw:        "/Volumes/finmarket_dev/landing/raw_trades/"
@@ -7,12 +8,10 @@ paths:
   quarantine: "/Volumes/finmarket_dev/silver/trades_quarantine/"
   gold:       "/Volumes/finmarket_dev/gold/trade_summary/"
 
-catalog: finmarket_dev
-
 tables:
-  bronze: "finmarket.bronze.trades"
-  silver: "finmarket.silver.trades"
-  gold:   "finmarket.gold.trade_summary"
+  bronze: "finmarket_dev.bronze.trades"
+  silver: "finmarket_dev.silver.trades"
+  gold:   "finmarket_dev.gold.trade_summary"
 
 write:
   bronze_mode: "append"
