@@ -1,11 +1,11 @@
 env: dev
 
 paths:
-  raw:        "/Volumes/finmarket/landing/raw_trades/"
-  bronze:     "/Volumes/finmarket/bronze/trades/"
-  silver:     "/Volumes/finmarket/silver/trades/"
-  quarantine: "/Volumes/finmarket/silver/trades_quarantine/"
-  gold:       "/Volumes/finmarket/gold/trade_summary/"
+  raw:        "/Volumes/finmarket_dev/landing/raw_trades/"
+  bronze:     "/Volumes/finmarket_dev/bronze/trades/"
+  silver:     "/Volumes/finmarket_dev/silver/trades/"
+  quarantine: "/Volumes/finmarket_dev/silver/trades_quarantine/"
+  gold:       "/Volumes/finmarket_dev/gold/trade_summary/"
 
 catalog: finmarket
 
